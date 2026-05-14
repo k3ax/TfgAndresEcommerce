@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Carrito - San Andrés</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="navbar">
+    <h1 onclick="location.href='index.html'" style="cursor:pointer">San Andrés</h1>
+    <button onclick="location.href='index.html'">Seguir Comprando</button>
+</header>
+
+<main class="carrito-container">
+    <h2>Tu Pedido</h2>
+    <div id="lista-carrito">
+        <!-- Se carga con JS -->
+    </div>
+    <hr>
+    <div class="total-seccion">
+        <h3>Total: <span id="precio-total">0</span>€</h3>
+        <button id="btn-finalizar" onclick="finalizarCompra()">Finalizar Compra</button>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', mostrarCarrito);
+
+    async function mostrarCarrito() {
+        const ids = JSON.parse(localStorage.getItem('carrito')) || [];
+        const contenedor = document.getElementById('lista-carrito');
+        const totalTxt = document.getElementById('precio-total');
+
+        if (ids.length === 0) {
+            contenedor.innerHTML = "<p>El carrito está vacío.</p>";
+            return;
+        }
+
+        // Pedimos todos los productos para sacar los nombres y precios
+        const res = await fetch('/api/productos');
+        const productosBD = await res.json();
+
+        let html = "";
+        let total = 0;
+
+        // Filtramos los productos que están en nuestro carrito
+        ids.forEach(id => {
+            const p = productosBD.find(prod => prod.id == id);
+            if (p) {
+                html += `
+                    <div class="item-carrito">
+                        <span>${p.nombre}</span>
+                        <span>${p.precio}€</span>
+                    </div>
+                `;
+                total += p.precio;
+            }
+        });
+
+        contenedor.innerHTML = html;
+        totalTxt.innerText = total.toFixed(2);
+    }
+
+    async function finalizarCompra() {
+        const ids = JSON.parse(localStorage.getItem('carrito')) || [];
+
+        // Para cada producto en el carrito, llamamos al endpoint de compra
+        for (const id of ids) {
+            await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
+        }
+
+        alert("¡Compra realizada con éxito! El stock ha sido actualizado.");
+        localStorage.removeItem('carrito');
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

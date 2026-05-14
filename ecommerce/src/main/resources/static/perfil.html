@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Perfil - San Andrés</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="navbar">
+    <h1 onclick="location.href='index.html'" style="cursor:pointer">San Andrés</h1>
+    <button onclick="location.href='index.html'">Volver a la Tienda</button>
+</header>
+
+<main>
+    <div class="form-container">
+        <h2>Datos de mi Cuenta</h2>
+        <hr><br>
+        <div id="datos-usuario">
+            <p><strong>Nombre de Usuario:</strong> <span id="prof-username"></span></p>
+            <p><strong>Correo Electrónico:</strong> <span id="prof-email"></span></p>
+            <p><strong>Nivel de Acceso:</strong> <span id="prof-rol" class="badge"></span></p>
+        </div>
+        <br>
+        <button onclick="cerrarSesion()" class="btn-delete" style="width:100%">Cerrar Sesión</button>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+
+        if (!usuario) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // Rellenar los datos en la pantalla
+        document.getElementById('prof-username').innerText = usuario.username;
+        document.getElementById('prof-email').innerText = usuario.email;
+        document.getElementById('prof-rol').innerText = usuario.rol;
+
+        // Estilo extra para el Rol
+        const rolSpan = document.getElementById('prof-rol');
+        if(usuario.rol === 'ADMIN') {
+            rolSpan.style.color = 'red';
+            rolSpan.style.fontWeight = 'bold';
+        } else {
+            rolSpan.style.color = 'green';
+        }
+    });
+
+    function cerrarSesion() {
+        sessionStorage.clear();
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

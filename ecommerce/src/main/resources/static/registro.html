@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Registro - San Andrés</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="form-container">
+    <h2>Registro de Usuario</h2>
+    <form id="registroForm">
+        <input type="text" id="reg-username" placeholder="Nombre de usuario" required>
+        <input type="email" id="reg-email" placeholder="Correo electrónico" required>
+        <input type="password" id="reg-password" placeholder="Contraseña" required>
+        <button type="submit">Crear cuenta</button>
+    </form>
+    <p style="margin-top: 20px;">¿Ya tienes cuenta? <a href="login.html">Inicia sesión aquí</a></p>
+</div>
+
+<script>
+    document.getElementById('registroForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nuevoUser = {
+            username: document.getElementById('reg-username').value,
+            email: document.getElementById('reg-email').value,
+            password: document.getElementById('reg-password').value,
+            rol: 'USER_BASIC'
+        };
+
+        const res = await fetch('/api/usuarios/registro', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(nuevoUser)
+        });
+
+        if (res.ok) {
+            alert("Cuenta creada con éxito");
+            window.location.href = 'login.html';
+        } else {
+            alert("Error al registrar usuario");
+        }
+    });
+</script>
+</body>
+</html>
