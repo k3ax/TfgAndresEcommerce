@@ -207,3 +207,18 @@ button:hover {
 .google-map iframe {
     display: block; /* Elimina espacios en blanco extraños debajo del iframe */
 }
+
+/* --- ESTILOS PARA EL CARRITO --- */
+.item-carrito {
+    transition: 0.2s;
+    border-radius: 8px;
+}
+
+.item-carrito:hover {
+    background-color: #f8f9fa !important;
+}
+
+#btn-finalizar:hover {
+    background-color: #218838;
+    transform: scale(1.02);
+}

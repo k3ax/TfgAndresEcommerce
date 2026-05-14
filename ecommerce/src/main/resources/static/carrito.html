@@ -7,24 +7,40 @@
 </head>
 <body>
 <header class="navbar">
-    <h1 onclick="location.href='index.html'" style="cursor:pointer">San Andrés</h1>
-    <button onclick="location.href='index.html'">Seguir Comprando</button>
+    <h1 class="logo" onclick="location.href='index.html'" style="cursor:pointer">San Andrés</h1>
+    <div id="nav-auth-buttons" class="nav-buttons">
+    </div>
 </header>
 
-<main class="carrito-container">
-    <h2>Tu Pedido</h2>
-    <div id="lista-carrito">
-        <!-- Se carga con JS -->
+<main class="form-container" style="max-width: 800px;">
+    <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--primary-color); display: inline-block;">Tu Cesta</h2>
+
+    <div id="lista-carrito" style="margin-top: 20px;">
     </div>
-    <hr>
-    <div class="total-seccion">
-        <h3>Total: <span id="precio-total">0</span>€</h3>
-        <button id="btn-finalizar" onclick="finalizarCompra()">Finalizar Compra</button>
+
+    <hr style="margin: 20px 0;">
+
+    <div class="total-seccion" style="text-align: right; padding: 10px;">
+        <h3>Total: <span id="precio-total" style="color: var(--success-color);">0</span>€</h3>
+        <button id="btn-finalizar" onclick="finalizarCompra()" style="margin-top: 15px; width: 250px; background-color: var(--success-color);">
+            Finalizar Compra y Pagar
+        </button>
     </div>
 </main>
 
+<footer class="footer-simple">
+    <p>© 2026 E-commerce San Andrés - Proyecto TFG</p>
+</footer>
+
+<script src="js/app.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', mostrarCarrito);
+    document.addEventListener('DOMContentLoaded', () => {
+        // Llamamos a las funciones de app.js para que el navbar funcione
+        if (typeof verificarSesion === 'function') verificarSesion();
+        if (typeof actualizarContadorCarrito === 'function') actualizarContadorCarrito();
+
+        mostrarCarrito();
+    });
 
     async function mostrarCarrito() {
         const ids = JSON.parse(localStorage.getItem('carrito')) || [];
@@ -32,74 +48,54 @@
         const totalTxt = document.getElementById('precio-total');
 
         if (ids.length === 0) {
-            contenedor.innerHTML = "<p>El carrito está vacío.</p>";
+            contenedor.innerHTML = "<p style='padding: 20px;'>Tu carrito está actualmente vacío.</p>";
             return;
         }
 
-        // Pedimos todos los productos para sacar los nombres y precios
-        const res = await fetch('/api/productos');
-        const productosBD = await res.json();
+        try {
+            const res = await fetch('/api/productos');
+            const productosBD = await res.json();
 
-        let html = "";
-        let total = 0;
+            let html = "";
+            let total = 0;
 
-        // Filtramos los productos que están en nuestro carrito
-        ids.forEach(id => {
-            const p = productosBD.find(prod => prod.id == id);
-            if (p) {
-                html += `
-                    <div class="item-carrito">
-                        <span>${p.nombre}</span>
-                        <span>${p.precio}€</span>
-                    </div>
-                `;
-                total += p.precio;
-            }
-        });
+            ids.forEach(id => {
+                const p = productosBD.find(prod => prod.id == id);
+                if (p) {
+                    html += `
+                        <div class="item-carrito" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:white; border-bottom:1px solid #eee; margin-bottom:5px;">
+                            <div style="display:flex; align-items:center; gap:15px;">
+                                <img src="${p.imagenUrl || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
+                                <strong>${p.nombre}</strong>
+                            </div>
+                            <span style="font-weight:bold; color:var(--primary-color);">${p.precio}€</span>
+                        </div>
+                    `;
+                    total += p.precio;
+                }
+            });
 
-        contenedor.innerHTML = html;
-        totalTxt.innerText = total.toFixed(2);
+            contenedor.innerHTML = html;
+            totalTxt.innerText = total.toFixed(2);
+        } catch (error) {
+            console.error("Error al cargar productos en el carrito:", error);
+            contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
+        }
     }
 
     async function finalizarCompra() {
-        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
-        if (!usuario) {
-            alert("Debes iniciar sesión para comprar");
-            window.location.href = 'login.html';
-            return;
-        }
-
         const ids = JSON.parse(localStorage.getItem('carrito')) || [];
         if (ids.length === 0) return;
 
-        const total = parseFloat(document.getElementById('precio-total').innerText);
+        if (!confirm("¿Deseas confirmar el pago de este pedido?")) return;
 
-        // 1. Guardar el pedido en el historial
-        const datosPedido = {
-            usuarioId: usuario.id,
-            productosIds: ids,
-            total: total
-        };
-
-        const resPedido = await fetch('/api/pedidos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datosPedido)
-        });
-
-        if (resPedido.ok) {
-            // 2. Descontar stock (tu lógica actual)
-            for (const id of ids) {
-                await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
-            }
-
-            alert("¡Compra realizada con éxito! Revisa tu historial en tu perfil.");
-            localStorage.removeItem('carrito');
-            window.location.href = 'index.html';
-        } else {
-            alert("Error al procesar el pedido");
+        for (const id of ids) {
+            await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
         }
-    }
+
+        alert("¡Compra realizada con éxito! El stock se ha actualizado.");
+        localStorage.removeItem('carrito');
+        window.location.href = 'index.html';
     }
 </script>
 </body>
