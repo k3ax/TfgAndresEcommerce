@@ -4,6 +4,52 @@
     <meta charset="UTF-8">
     <title>Mi Carrito - San Andrés</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .item-carrito {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+        .item-carrito:hover {
+            transform: translateX(5px);
+            background-color: #fcfcfc;
+        }
+        .info-producto {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .img-carrito {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+        .btn-quitar {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-quitar:hover { background: #c0392b; }
+
+        .acciones-carrito {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+    </style>
 </head>
 <body>
 <header class="navbar">
@@ -12,18 +58,23 @@
     </div>
 </header>
 
-<main class="form-container" style="max-width: 800px;">
-    <h2 style="margin-bottom: 20px; border-bottom: 2px solid var(--primary-color); display: inline-block;">Tu Cesta</h2>
+<main class="form-container" style="max-width: 850px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>Tu Cesta</h2>
+        <button onclick="location.href='index.html'" style="background-color: #95a5a6;">← Volver a la Tienda</button>
+    </div>
 
-    <div id="lista-carrito" style="margin-top: 20px;">
+    <div id="lista-carrito">
     </div>
 
     <hr style="margin: 20px 0;">
 
-    <div class="total-seccion" style="text-align: right; padding: 10px;">
-        <h3>Total: <span id="precio-total" style="color: var(--success-color);">0</span>€</h3>
-        <button id="btn-finalizar" onclick="finalizarCompra()" style="margin-top: 15px; width: 250px; background-color: var(--success-color);">
-            Finalizar Compra y Pagar
+    <div class="acciones-carrito">
+        <div class="total-info">
+            <h3 style="margin: 0;">Total a pagar: <span id="precio-total" style="color: #27ae60;">0</span>€</h3>
+        </div>
+        <button id="btn-comprar" onclick="finalizarCompra()" style="padding: 12px 30px; background-color: #27ae60; font-size: 1rem;">
+            Confirmar y Pagar
         </button>
     </div>
 </main>
@@ -35,10 +86,8 @@
 <script src="js/app.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // Llamamos a las funciones de app.js para que el navbar funcione
-        if (typeof verificarSesion === 'function') verificarSesion();
-        if (typeof actualizarContadorCarrito === 'function') actualizarContadorCarrito();
-
+        verificarSesion();
+        actualizarContadorCarrito();
         mostrarCarrito();
     });
 
@@ -48,7 +97,9 @@
         const totalTxt = document.getElementById('precio-total');
 
         if (ids.length === 0) {
-            contenedor.innerHTML = "<p style='padding: 20px;'>Tu carrito está actualmente vacío.</p>";
+            contenedor.innerHTML = "<div style='text-align:center; padding:40px;'><p>Tu cesta está vacía.</p><br><button onclick='location.href=\"index.html\"'>Ir a comprar algo</button></div>";
+            totalTxt.innerText = "0";
+            document.getElementById('btn-comprar').style.display = 'none';
             return;
         }
 
@@ -59,16 +110,23 @@
             let html = "";
             let total = 0;
 
-            ids.forEach(id => {
+            ids.forEach((id, index) => {
                 const p = productosBD.find(prod => prod.id == id);
                 if (p) {
+                    const img = p.imagenUrl ? p.imagenUrl : 'https://via.placeholder.com/60?text=Prod';
                     html += `
-                        <div class="item-carrito" style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:white; border-bottom:1px solid #eee; margin-bottom:5px;">
-                            <div style="display:flex; align-items:center; gap:15px;">
-                                <img src="${p.imagenUrl || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; object-fit:cover; border-radius:4px;">
-                                <strong>${p.nombre}</strong>
+                        <div class="item-carrito">
+                            <div class="info-producto">
+                                <img src="${img}" class="img-carrito">
+                                <div>
+                                    <strong style="display:block;">${p.nombre}</strong>
+                                    <small style="color:#888;">Categoría: ${p.categoria}</small>
+                                </div>
                             </div>
-                            <span style="font-weight:bold; color:var(--primary-color);">${p.precio}€</span>
+                            <div style="display:flex; align-items:center; gap:20px;">
+                                <span style="font-weight:bold; font-size:1.1rem;">${p.precio}€</span>
+                                <button class="btn-quitar" onclick="eliminarDelCarrito(${index})">Eliminar</button>
+                            </div>
                         </div>
                     `;
                     total += p.precio;
@@ -77,25 +135,57 @@
 
             contenedor.innerHTML = html;
             totalTxt.innerText = total.toFixed(2);
-        } catch (error) {
-            console.error("Error al cargar productos en el carrito:", error);
-            contenedor.innerHTML = "<p>Error al conectar con el servidor.</p>";
+            document.getElementById('btn-comprar').style.display = 'block';
+        } catch (e) {
+            contenedor.innerHTML = "<p>Error al cargar los productos.</p>";
         }
     }
 
+    function eliminarDelCarrito(index) {
+        let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        carrito.splice(index, 1);
+        localStorage.setItem('carrito', JSON.stringify(carrito));
+
+        mostrarCarrito();
+        actualizarContadorCarrito();
+    }
+
     async function finalizarCompra() {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        if (!usuario) {
+            alert("Debes iniciar sesión para finalizar el pedido");
+            window.location.href = 'login.html';
+            return;
+        }
+
         const ids = JSON.parse(localStorage.getItem('carrito')) || [];
         if (ids.length === 0) return;
 
-        if (!confirm("¿Deseas confirmar el pago de este pedido?")) return;
+        const total = parseFloat(document.getElementById('precio-total').innerText);
 
-        for (const id of ids) {
-            await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
+        // Crear el registro del pedido en el historial
+        const resPedido = await fetch('/api/pedidos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                usuarioId: usuario.id,
+                productosIds: ids,
+                total: total
+            })
+        });
+
+        if (resPedido.ok) {
+            // Actualizar stock en la base de datos
+            for (const id of ids) {
+                await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
+            }
+
+            alert("¡Pedido realizado correctamente! Gracias por tu compra.");
+            localStorage.removeItem('carrito');
+            window.location.href = 'index.html';
+        } else {
+            alert("Hubo un error al procesar el pedido en el servidor.");
         }
-
-        alert("¡Compra realizada con éxito! El stock se ha actualizado.");
-        localStorage.removeItem('carrito');
-        window.location.href = 'index.html';
     }
 </script>
 </body>
