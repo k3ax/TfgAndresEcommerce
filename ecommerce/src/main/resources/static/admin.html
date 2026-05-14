@@ -5,303 +5,189 @@
     <title>Panel Admin - San Andrés</title>
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         .admin-container { padding: 2rem 5%; }
 
+        /* TARJETAS DE RESUMEN */
         .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;
         }
         .stat-card {
-            background: white;
-            padding: 25px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            text-align: center;
-            border-bottom: 5px solid #3498db;
-            transition: transform 0.2s;
+            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; border-bottom: 5px solid #3498db;
         }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-card h4 { color: #7f8c8d; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card .numero { font-size: 2.5rem; color: #2c3e50; font-weight: bold; }
+        .stat-card .numero { font-size: 2rem; font-weight: bold; margin-top: 10px; }
 
-        .stat-card.ingresos { border-bottom-color: #27ae60; }
-        .stat-card.ingresos .numero { color: #27ae60; }
-        .stat-card.pedidos { border-bottom-color: #f39c12; }
-        .stat-card.pedidos .numero { color: #f39c12; }
-        .stat-card.usuarios { border-bottom-color: #9b59b6; }
-        .stat-card.usuarios .numero { color: #9b59b6; }
-
-        /* Contenedor para que la gráfica no se haga gigante */
-        .grafica-container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 40px;
-            width: 100%;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
+        /* FILA DE 3 GRÁFICAS SIMÉTRICAS */
+        .charts-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px;
         }
+        .chart-box {
+            background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); min-height: 320px;
+            display: flex; flex-direction: column;
+        }
+        .chart-box h4 { text-align: center; color: #7f8c8d; margin-bottom: 15px; font-size: 0.85rem; text-transform: uppercase; }
+        .chart-box canvas { flex-grow: 1; max-height: 250px; }
 
         .form-admin { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .form-admin input, .form-admin select { display: block; width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .form-admin input, .form-admin select { display: block; width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+
+        table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background-color: #2c3e50; color: white; }
-        .low-stock { color: #e74c3c; font-weight: bold; }
-        .btn-delete { background: #c0392b; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-delete:hover { background: #a93226; }
-        h3 { color: #2c3e50; border-bottom: 2px solid #3498db; display: inline-block; margin-bottom: 15px; }
+        .btn-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-delete:hover { background: #c0392b; }
     </style>
 </head>
 <body>
 <header class="navbar">
-    <h1>Centro de Mando - San Andrés</h1>
-    <button onclick="location.href='index.html'" style="padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer; background: #95a5a6; color: white;">Volver a la Tienda</button>
+    <h1>Panel de Control - San Andrés</h1>
+    <button onclick="location.href='index.html'" style="padding: 8px 15px; background: #95a5a6; color: white; border: none; border-radius: 4px; cursor: pointer;">Volver a la Tienda</button>
 </header>
 
 <div class="admin-container">
 
-    <h3>Resumen General</h3>
     <div class="dashboard-grid">
-        <div class="stat-card ingresos">
-            <h4>Ingresos Totales</h4>
-            <div class="numero" id="stat-ingresos">0.00€</div>
-        </div>
-        <div class="stat-card pedidos">
-            <h4>Ventas Realizadas</h4>
-            <div class="numero" id="stat-pedidos">0</div>
-        </div>
-        <div class="stat-card usuarios">
-            <h4>Clientes Registrados</h4>
-            <div class="numero" id="stat-usuarios">0</div>
-        </div>
-        <div class="stat-card">
-            <h4>Tipos de Producto</h4>
-            <div class="numero" id="stat-productos">0</div>
-        </div>
+        <div class="stat-card" style="border-color: #27ae60;"><h4 style="color:#27ae60">Ingresos</h4><div class="numero" id="stat-ingresos">0.00€</div></div>
+        <div class="stat-card" style="border-color: #f39c12;"><h4 style="color:#f39c12">Pedidos</h4><div class="numero" id="stat-pedidos">0</div></div>
+        <div class="stat-card" style="border-color: #9b59b6;"><h4 style="color:#9b59b6">Usuarios</h4><div class="numero" id="stat-usuarios">0</div></div>
+        <div class="stat-card" style="border-color: #3498db;"><h4 style="color:#3498db">Catálogo</h4><div class="numero" id="stat-productos">0</div></div>
     </div>
 
-    <div class="grafica-container">
-        <h4 style="text-align: center; color: #7f8c8d; margin-bottom: 15px;">Distribución del Catálogo por Categoría</h4>
-        <canvas id="graficaCategorias"></canvas>
+    <div class="charts-row">
+        <div class="chart-box"><h4>Categorías</h4><canvas id="chartCategorias"></canvas></div>
+        <div class="chart-box"><h4>Evolución Ventas</h4><canvas id="chartVentas"></canvas></div>
+        <div class="chart-box"><h4>Salud del Stock</h4><canvas id="chartStock"></canvas></div>
     </div>
 
     <div class="form-admin">
         <h3>Añadir Nuevo Producto</h3>
         <form id="prodForm">
             <input type="text" id="nombre" placeholder="Nombre del producto" required>
-            <input type="text" id="descripcion" placeholder="Descripción">
+            <input type="text" id="descripcion" placeholder="Descripción corta">
             <input type="number" id="precio" placeholder="Precio (€)" step="0.01" required>
-            <input type="number" id="stock" placeholder="Cantidad en Stock" required>
-
+            <input type="number" id="stock" placeholder="Stock inicial" required>
             <select id="categoria" required>
-                <option value="" disabled selected>Selecciona una categoría</option>
                 <option value="Alimentos">Alimentos</option>
                 <option value="Hogar">Hogar</option>
                 <option value="Tecnología">Tecnología</option>
                 <option value="Accesorios">Accesorios</option>
                 <option value="Mascotas">Mascotas</option>
             </select>
-
-            <input type="text" id="imagenUrl" placeholder="URL de la imagen">
-            <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%;">Guardar en Base de Datos</button>
+            <input type="text" id="imagenUrl" placeholder="URL de la imagen (ej: https://...)">
+            <button type="submit" style="background: #3498db; color: white; padding: 12px; width: 100%; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">GUARDAR PRODUCTO</button>
         </form>
     </div>
 
-    <h3>Lista de Productos y Stock</h3>
+    <h3>Inventario</h3>
     <table>
-        <thead>
-        <tr>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th>Precio</th>
-            <th>Stock</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
+        <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr></thead>
         <tbody id="tablaProductos"></tbody>
     </table>
 
     <h3>Moderación de Comentarios</h3>
     <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Usuario</th>
-            <th>Producto</th>
-            <th>Valoración</th>
-            <th>Comentario</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
+        <thead><tr><th>Usuario</th><th>Producto</th><th>Estrellas</th><th>Comentario</th><th>Acciones</th></tr></thead>
         <tbody id="tablaValoraciones"></tbody>
     </table>
 </div>
 
 <script>
-    let miGraficaInstancia = null; // Guardamos la instancia para poder actualizarla luego
+    let c1, c2, c3;
 
     document.addEventListener('DOMContentLoaded', () => {
         const user = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
         if (!user || user.rol !== 'ADMIN') {
-            alert("Acceso denegado. Debes ser Administrador.");
             window.location.href = 'index.html';
             return;
         }
-
         cargarEstadisticas();
-        renderTablaProductos(); // Esta función ahora también dibuja la gráfica
-        renderTablaValoraciones();
+        renderTablas();
     });
 
     async function cargarEstadisticas() {
-        try {
-            const res = await fetch('/api/pedidos/estadisticas');
-            if (res.ok) {
-                const data = await res.json();
-                document.getElementById('stat-ingresos').innerText = data.ingresosTotales.toFixed(2) + '€';
-                document.getElementById('stat-pedidos').innerText = data.numeroPedidos;
-                document.getElementById('stat-usuarios').innerText = data.clientesRegistrados;
-                document.getElementById('stat-productos').innerText = data.productosCatalogo;
-            }
-        } catch (error) {
-            console.error("Error cargando estadísticas", error);
-        }
+        const res = await fetch('/api/pedidos/estadisticas');
+        const data = await res.json();
+        document.getElementById('stat-ingresos').innerText = data.ingresosTotales.toFixed(2) + '€';
+        document.getElementById('stat-pedidos').innerText = data.numeroPedidos;
+        document.getElementById('stat-usuarios').innerText = data.clientesRegistrados;
+        document.getElementById('stat-productos').innerText = data.productosCatalogo;
+        dibujarVentas(data.ventasDiarias);
     }
 
-    async function renderTablaProductos() {
-        const res = await fetch('/api/productos');
-        const productos = await res.json();
-        const tbody = document.getElementById('tablaProductos');
-        tbody.innerHTML = '';
-
-        // 3. DIBUJAR LA GRÁFICA CON LOS DATOS OBTENIDOS
-        dibujarGrafica(productos);
-
+    async function renderTablas() {
+        const resP = await fetch('/api/productos');
+        const productos = await resP.json();
+        const tbodyP = document.getElementById('tablaProductos');
+        tbodyP.innerHTML = '';
         productos.forEach(p => {
-            const stockClass = p.stock <= 5 ? 'low-stock' : '';
-            tbody.innerHTML += `
-                <tr>
-                    <td>${p.nombre}</td>
-                    <td>${p.categoria}</td>
-                    <td>${p.precio}€</td>
-                    <td class="${stockClass}">${p.stock} ${p.stock === 0 ? '(AGOTADO)' : ''}</td>
-                    <td>
-                        <button class="btn-delete" onclick="eliminarProducto(${p.id})">Borrar</button>
-                    </td>
-                </tr>
-            `;
+            tbodyP.innerHTML += `<tr><td>${p.nombre}</td><td>${p.categoria}</td><td>${p.precio}€</td><td>${p.stock}</td><td><button class="btn-delete" onclick="eliminarProducto(${p.id})">Borrar</button></td></tr>`;
+        });
+        dibujarCategorias(productos);
+        dibujarStock(productos);
+
+        const resV = await fetch('/api/valoraciones');
+        const valoraciones = await resV.json();
+        const tbodyV = document.getElementById('tablaValoraciones');
+        tbodyV.innerHTML = '';
+        valoraciones.forEach(v => {
+            tbodyV.innerHTML += `<tr><td>${v.usuario.username}</td><td>${v.producto.nombre}</td><td style="color:#f1c40f">${'★'.repeat(v.estrellas)}</td><td>${v.comentario}</td><td><button class="btn-delete" onclick="eliminarValoracion(${v.id})">Borrar</button></td></tr>`;
         });
     }
 
-    // --- FUNCIÓN EXCLUSIVA PARA CHART.JS ---
-    function dibujarGrafica(productos) {
-        // Agrupamos cuántos productos hay por categoría
-        const conteoCategorias = {};
-        productos.forEach(p => {
-            conteoCategorias[p.categoria] = (conteoCategorias[p.categoria] || 0) + 1;
+    function dibujarCategorias(prods) {
+        const counts = {};
+        prods.forEach(p => counts[p.categoria] = (counts[p.categoria] || 0) + 1);
+        if(c1) c1.destroy();
+        c1 = new Chart(document.getElementById('chartCategorias'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(counts), datasets: [{ data: Object.values(counts), backgroundColor: ['#3498db','#e74c3c','#f1c40f','#2ecc71','#9b59b6'] }] },
+            options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
         });
+    }
 
-        const ctx = document.getElementById('graficaCategorias').getContext('2d');
-
-        // Si ya existe una gráfica, la destruimos antes de redibujar (evita errores visuales al borrar/añadir)
-        if (miGraficaInstancia) {
-            miGraficaInstancia.destroy();
-        }
-
-        miGraficaInstancia = new Chart(ctx, {
-            type: 'doughnut', // Tipo de gráfica: Donut
-            data: {
-                labels: Object.keys(conteoCategorias),
-                datasets: [{
-                    label: 'Cantidad de Productos',
-                    data: Object.values(conteoCategorias),
-                    backgroundColor: [
-                        '#e74c3c', // Rojo
-                        '#3498db', // Azul
-                        '#f1c40f', // Amarillo
-                        '#2ecc71', // Verde
-                        '#9b59b6'  // Morado
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom' }
-                }
-            }
+    function dibujarVentas(ventas) {
+        if(c2) c2.destroy();
+        const labels = ventas.map(v => {
+            const fecha = new Date(v[0]);
+            return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
         });
+        c2 = new Chart(document.getElementById('chartVentas'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Ventas (€)', data: ventas.map(v => v[1]), borderColor: '#27ae60', backgroundColor: 'rgba(39,174,96,0.1)', fill: true, tension: 0.4, pointRadius: 5 }] },
+            options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '€' } } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    function dibujarStock(prods) {
+        if(c3) c3.destroy();
+        c3 = new Chart(document.getElementById('chartStock'), {
+            type: 'bar',
+            data: { labels: prods.map(p => p.nombre), datasets: [{ label: 'Stock', data: prods.map(p => p.stock), backgroundColor: prods.map(p => p.stock < 5 ? '#e74c3c' : '#3498db') }] },
+            options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+        });
+    }
+
+    async function eliminarProducto(id) {
+        if(confirm('¿Borrar producto?')) { await fetch(`/api/productos/${id}`, { method: 'DELETE' }); renderTablas(); cargarEstadisticas(); }
+    }
+
+    async function eliminarValoracion(id) {
+        if(confirm('¿Borrar comentario?')) { await fetch(`/api/valoraciones/${id}`, { method: 'DELETE' }); renderTablas(); }
     }
 
     document.getElementById('prodForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const nuevoProd = {
+        const p = {
             nombre: document.getElementById('nombre').value,
             descripcion: document.getElementById('descripcion').value,
-            precio: parseFloat(document.getElementById('precio').value),
-            stock: parseInt(document.getElementById('stock').value),
+            precio: document.getElementById('precio').value,
+            stock: document.getElementById('stock').value,
             categoria: document.getElementById('categoria').value,
             imagenUrl: document.getElementById('imagenUrl').value
         };
-
-        await fetch('/api/productos', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(nuevoProd)
-        });
-
-        e.target.reset();
-        renderTablaProductos(); // Recarga la tabla y redibuja la gráfica automáticamente
-        cargarEstadisticas();
+        await fetch('/api/productos', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(p) });
+        e.target.reset(); renderTablas(); cargarEstadisticas();
     });
-
-    async function eliminarProducto(id) {
-        if(confirm('¿Estás seguro de eliminar este producto?')) {
-            await fetch(`/api/productos/${id}`, { method: 'DELETE' });
-            renderTablaProductos(); // Recarga la tabla y redibuja la gráfica
-            cargarEstadisticas();
-        }
-    }
-
-    async function renderTablaValoraciones() {
-        const res = await fetch('/api/valoraciones');
-        const valoraciones = await res.json();
-        const tbody = document.getElementById('tablaValoraciones');
-        tbody.innerHTML = '';
-
-        if(valoraciones.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: gray;">No hay valoraciones registradas.</td></tr>';
-            return;
-        }
-
-        valoraciones.forEach(v => {
-            tbody.innerHTML += `
-                <tr>
-                    <td>#${v.id}</td>
-                    <td><strong>${v.usuario.username}</strong></td>
-                    <td>${v.producto.nombre}</td>
-                    <td style="color: #f1c40f; font-size: 1.2rem;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</td>
-                    <td style="font-style: italic;">"${v.comentario}"</td>
-                    <td><button class="btn-delete" onclick="eliminarValoracion(${v.id})">Eliminar</button></td>
-                </tr>
-            `;
-        });
-    }
-
-    async function eliminarValoracion(id) {
-        if(confirm('¿Estás seguro de que quieres eliminar esta opinión permanentemente?')) {
-            await fetch(`/api/valoraciones/${id}`, { method: 'DELETE' });
-            renderTablaValoraciones();
-        }
-    }
 </script>
 </body>
 </html>

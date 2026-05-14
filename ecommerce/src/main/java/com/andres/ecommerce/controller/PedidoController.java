@@ -34,8 +34,6 @@ public class PedidoController {
         Double total = Double.valueOf(datos.get("total").toString());
 
         Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
-
-        // Buscamos los productos en la BD
         List<Producto> productos = productoRepository.findAllById(
                 productosIds.stream().map(Long::valueOf).collect(Collectors.toList())
         );
@@ -54,19 +52,14 @@ public class PedidoController {
         return pedidoRepository.findByUsuarioIdOrderByFechaDesc(usuarioId);
     }
 
-    // --- NUEVO ENDPOINT PARA LAS ESTADÍSTICAS DEL ADMIN ---
     @GetMapping("/estadisticas")
     public Map<String, Object> obtenerEstadisticas() {
         Map<String, Object> stats = new HashMap<>();
-
-        // Usamos las consultas creadas en el Repository
         stats.put("ingresosTotales", pedidoRepository.sumarIngresosTotales());
         stats.put("numeroPedidos", pedidoRepository.contarTotalPedidos());
-
-        // Contamos directamente desde los repositorios que ya tienes inyectados
         stats.put("clientesRegistrados", usuarioRepository.count());
         stats.put("productosCatalogo", productoRepository.count());
-
+        stats.put("ventasDiarias", pedidoRepository.obtenerVentasPorDia());
         return stats;
     }
 }
