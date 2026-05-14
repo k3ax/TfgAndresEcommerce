@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,9 +23,9 @@ public class PedidoController {
     @Autowired
     private PedidoRepository pedidoRepository;
     @Autowired
-    private UsuarioRepository usuarioRepository; //
+    private UsuarioRepository usuarioRepository;
     @Autowired
-    private ProductoRepository productoRepository; //
+    private ProductoRepository productoRepository;
 
     @PostMapping
     public Pedido crearPedido(@RequestBody Map<String, Object> datos) {
@@ -32,7 +33,7 @@ public class PedidoController {
         List<Integer> productosIds = (List<Integer>) datos.get("productosIds");
         Double total = Double.valueOf(datos.get("total").toString());
 
-        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow(); //
+        Usuario usuario = usuarioRepository.findById(usuarioId).orElseThrow();
 
         // Buscamos los productos en la BD
         List<Producto> productos = productoRepository.findAllById(
@@ -51,5 +52,21 @@ public class PedidoController {
     @GetMapping("/usuario/{usuarioId}")
     public List<Pedido> listarPorUsuario(@PathVariable Long usuarioId) {
         return pedidoRepository.findByUsuarioIdOrderByFechaDesc(usuarioId);
+    }
+
+    // --- NUEVO ENDPOINT PARA LAS ESTADÍSTICAS DEL ADMIN ---
+    @GetMapping("/estadisticas")
+    public Map<String, Object> obtenerEstadisticas() {
+        Map<String, Object> stats = new HashMap<>();
+
+        // Usamos las consultas creadas en el Repository
+        stats.put("ingresosTotales", pedidoRepository.sumarIngresosTotales());
+        stats.put("numeroPedidos", pedidoRepository.contarTotalPedidos());
+
+        // Contamos directamente desde los repositorios que ya tienes inyectados
+        stats.put("clientesRegistrados", usuarioRepository.count());
+        stats.put("productosCatalogo", productoRepository.count());
+
+        return stats;
     }
 }
