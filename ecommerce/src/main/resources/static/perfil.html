@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <title>Mi Perfil - San Andrés</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .pedido-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 5px solid var(--accent-color); box-shadow: var(--shadow); }
+        .pedido-info { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px; }
+        .pedido-productos { font-size: 0.85rem; color: #666; }
+    </style>
 </head>
 <body>
 <header class="navbar">
@@ -21,35 +26,53 @@
             <p><strong>Nivel de Acceso:</strong> <span id="prof-rol" class="badge"></span></p>
         </div>
         <br>
-        <button onclick="cerrarSesion()" class="btn-delete" style="width:100%">Cerrar Sesión</button>
+        <button onclick="cerrarSesion()" class="btn-delete" style="width:100%; margin-bottom: 20px;">Cerrar Sesión</button>
+
+        <h2>Mis Compras</h2>
+        <hr><br>
+        <div id="historial-pedidos">
+            <p>Cargando tus compras...</p>
+        </div>
     </div>
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
-
+    document.addEventListener('DOMContentLoaded', async () => {
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado')); //
         if (!usuario) {
             window.location.href = 'login.html';
             return;
         }
 
-        // Rellenar los datos en la pantalla
         document.getElementById('prof-username').innerText = usuario.username;
         document.getElementById('prof-email').innerText = usuario.email;
         document.getElementById('prof-rol').innerText = usuario.rol;
 
-        // Estilo extra para el Rol
-        const rolSpan = document.getElementById('prof-rol');
-        if(usuario.rol === 'ADMIN') {
-            rolSpan.style.color = 'red';
-            rolSpan.style.fontWeight = 'bold';
-        } else {
-            rolSpan.style.color = 'green';
+        // Cargar Historial
+        const res = await fetch(`/api/pedidos/usuario/${usuario.id}`);
+        const pedidos = await res.json();
+        const contenedor = document.getElementById('historial-pedidos');
+
+        if (pedidos.length === 0) {
+            contenedor.innerHTML = "<p>Aún no has realizado ninguna compra.</p>";
+            return;
         }
+
+        contenedor.innerHTML = pedidos.map(p => `
+            <div class="pedido-card">
+                <div class="pedido-info">
+                    <span><strong>Pedido #${p.id}</strong></span>
+                    <span>${new Date(p.fecha).toLocaleDateString()}</span>
+                </div>
+                <div class="pedido-productos">
+                    ${p.productos.map(prod => prod.nombre).join(', ')}
+                </div>
+                <p style="text-align: right; margin-top: 10px;"><strong>Total: ${p.total}€</strong></p>
+            </div>
+        `).join('');
     });
 
-    function cerrarSesion() {
+    function cerrarSesion() { //
         sessionStorage.clear();
         window.location.href = 'index.html';
     }

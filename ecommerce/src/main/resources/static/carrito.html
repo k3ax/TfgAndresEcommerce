@@ -62,16 +62,44 @@
     }
 
     async function finalizarCompra() {
-        const ids = JSON.parse(localStorage.getItem('carrito')) || [];
-
-        // Para cada producto en el carrito, llamamos al endpoint de compra
-        for (const id of ids) {
-            await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
+        const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+        if (!usuario) {
+            alert("Debes iniciar sesión para comprar");
+            window.location.href = 'login.html';
+            return;
         }
 
-        alert("¡Compra realizada con éxito! El stock ha sido actualizado.");
-        localStorage.removeItem('carrito');
-        window.location.href = 'index.html';
+        const ids = JSON.parse(localStorage.getItem('carrito')) || [];
+        if (ids.length === 0) return;
+
+        const total = parseFloat(document.getElementById('precio-total').innerText);
+
+        // 1. Guardar el pedido en el historial
+        const datosPedido = {
+            usuarioId: usuario.id,
+            productosIds: ids,
+            total: total
+        };
+
+        const resPedido = await fetch('/api/pedidos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosPedido)
+        });
+
+        if (resPedido.ok) {
+            // 2. Descontar stock (tu lógica actual)
+            for (const id of ids) {
+                await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
+            }
+
+            alert("¡Compra realizada con éxito! Revisa tu historial en tu perfil.");
+            localStorage.removeItem('carrito');
+            window.location.href = 'index.html';
+        } else {
+            alert("Error al procesar el pedido");
+        }
+    }
     }
 </script>
 </body>
