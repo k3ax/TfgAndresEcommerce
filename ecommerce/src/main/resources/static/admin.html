@@ -7,19 +7,20 @@
     <style>
         .admin-container { padding: 2rem 5%; }
         .form-admin { background: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .form-admin input { display: block; width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
+        .form-admin input, .form-admin select { display: block; width: 100%; margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; background: white; margin-bottom: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
         th { background-color: #2c3e50; color: white; }
         .low-stock { color: #e74c3c; font-weight: bold; }
-        .btn-delete { background: #c0392b; }
+        .btn-delete { background: #c0392b; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
         .btn-delete:hover { background: #a93226; }
+        h3 { color: #2c3e50; border-bottom: 2px solid #3498db; display: inline-block; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 <header class="navbar">
     <h1>Gestión de Inventario - San Andrés</h1>
-    <button onclick="location.href='index.html'">Volver a la Tienda</button>
+    <button onclick="location.href='index.html'" style="padding: 8px 15px; border-radius: 4px; border: none; cursor: pointer;">Volver a la Tienda</button>
 </header>
 
 <div class="admin-container">
@@ -30,9 +31,18 @@
             <input type="text" id="descripcion" placeholder="Descripción">
             <input type="number" id="precio" placeholder="Precio (€)" step="0.01" required>
             <input type="number" id="stock" placeholder="Cantidad en Stock" required>
-            <input type="text" id="categoria" placeholder="Categoría">
+
+            <select id="categoria" required>
+                <option value="" disabled selected>Selecciona una categoría</option>
+                <option value="Alimentos">Alimentos</option>
+                <option value="Hogar">Hogar</option>
+                <option value="Tecnología">Tecnología</option>
+                <option value="Accesorios">Accesorios</option>
+                <option value="Mascotas">Mascotas</option>
+            </select>
+
             <input type="text" id="imagenUrl" placeholder="URL de la imagen">
-            <button type="submit">Guardar en Base de Datos</button>
+            <button type="submit" style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%;">Guardar en Base de Datos</button>
         </form>
     </div>
 
@@ -48,7 +58,22 @@
         </tr>
         </thead>
         <tbody id="tablaProductos">
-        <!-- Se rellena con JS -->
+        </tbody>
+    </table>
+
+    <h3>Moderación de Comentarios</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Producto</th>
+            <th>Valoración</th>
+            <th>Comentario</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody id="tablaValoraciones">
         </tbody>
     </table>
 </div>
@@ -61,11 +86,12 @@
             alert("Acceso denegado. Debes ser Administrador.");
             window.location.href = 'index.html';
         }
-        renderTabla();
+        renderTablaProductos();
+        renderTablaValoraciones(); // Cargamos las valoraciones al entrar
     });
 
-    // FUNCIÓN PARA LISTAR PRODUCTOS
-    async function renderTabla() {
+    // --- LÓGICA DE PRODUCTOS ---
+    async function renderTablaProductos() {
         const res = await fetch('/api/productos');
         const productos = await res.json();
         const tbody = document.getElementById('tablaProductos');
@@ -87,7 +113,6 @@
         });
     }
 
-    // FUNCIÓN PARA CREAR PRODUCTO
     document.getElementById('prodForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const nuevoProd = {
@@ -106,14 +131,48 @@
         });
 
         e.target.reset();
-        renderTabla();
+        renderTablaProductos();
     });
 
-    // FUNCIÓN PARA ELIMINAR
     async function eliminarProducto(id) {
         if(confirm('¿Estás seguro de eliminar este producto?')) {
             await fetch(`/api/productos/${id}`, { method: 'DELETE' });
-            renderTabla();
+            renderTablaProductos();
+        }
+    }
+
+    // --- LÓGICA DE VALORACIONES ---
+    async function renderTablaValoraciones() {
+        const res = await fetch('/api/valoraciones');
+        const valoraciones = await res.json();
+        const tbody = document.getElementById('tablaValoraciones');
+        tbody.innerHTML = '';
+
+        if(valoraciones.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: gray;">No hay valoraciones registradas.</td></tr>';
+            return;
+        }
+
+        valoraciones.forEach(v => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>#${v.id}</td>
+                    <td><strong>${v.usuario.username}</strong></td>
+                    <td>${v.producto.nombre}</td>
+                    <td style="color: #f1c40f; font-size: 1.2rem;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</td>
+                    <td style="font-style: italic;">"${v.comentario}"</td>
+                    <td>
+                        <button class="btn-delete" onclick="eliminarValoracion(${v.id})">Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function eliminarValoracion(id) {
+        if(confirm('¿Estás seguro de que quieres eliminar esta opinión permanentemente?')) {
+            await fetch(`/api/valoraciones/${id}`, { method: 'DELETE' });
+            renderTablaValoraciones(); // Recargamos solo la tabla de valoraciones
         }
     }
 </script>

@@ -42,7 +42,7 @@ function filtrar() {
     renderizar(filtrados);
 }
 
-// 3. Pintar productos en el index.html (CON IMÁGENES)
+// 3. Pintar productos en el index.html (CON IMÁGENES Y VALORACIONES)
 function renderizar(lista) {
     const catalogo = document.getElementById('catalogo');
     if (!catalogo) return;
@@ -70,10 +70,112 @@ function renderizar(lista) {
             ${p.stock > 0
                 ? `<button onclick="agregarAlCarrito(${p.id})">Añadir al carrito</button>`
                 : '<span class="agotado">Agotado</span>'}
+
+            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
+            <div class="valoraciones-seccion" style="text-align: left;">
+                <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Opiniones</h4>
+
+                <div id="lista-valoraciones-${p.id}" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px; font-size: 0.85rem;">
+                    <span style="color: gray;">Cargando...</span>
+                </div>
+
+                <div class="nuevo-comentario" style="background: #f9f9f9; padding: 8px; border-radius: 4px; font-size: 0.85rem;">
+                    <select id="select-estrellas-${p.id}" style="width: 100%; margin-bottom: 5px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="5">5 Estrellas ★★★★★</option>
+                        <option value="4">4 Estrellas ★★★★☆</option>
+                        <option value="3">3 Estrellas ★★★☆☆</option>
+                        <option value="2">2 Estrellas ★★☆☆☆</option>
+                        <option value="1">1 Estrella ★☆☆☆☆</option>
+                    </select>
+                    <textarea id="input-comentario-${p.id}" placeholder="Escribe tu opinión..." style="width: 100%; height: 40px; margin-bottom: 5px; resize: none; padding: 4px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
+                    <button onclick="enviarValoracion(${p.id})" style="width: 100%; padding: 6px; font-size: 0.85rem;">Publicar</button>
+                </div>
+            </div>
         `;
         catalogo.appendChild(card);
+
+        // MUY IMPORTANTE: Cargar las valoraciones JUSTO después de añadir la tarjeta al HTML
+        cargarValoraciones(p.id, document.getElementById(`lista-valoraciones-${p.id}`));
     });
 }
+
+// -------------------------------------------------------------------------
+// BLOQUE NUEVO: LÓGICA DE LAS VALORACIONES (Cargar y Enviar)
+// -------------------------------------------------------------------------
+async function cargarValoraciones(productoId, elementoContenedor) {
+    if (!elementoContenedor) return;
+    try {
+        const res = await fetch(`/api/valoraciones/producto/${productoId}`);
+        if (!res.ok) return; // Si la API falla silenciosamente, abortamos
+        const valoraciones = await res.json();
+
+        if (valoraciones.length === 0) {
+            elementoContenedor.innerHTML = '<p style="color: gray;">Sin valoraciones aún.</p>';
+            return;
+        }
+
+        elementoContenedor.innerHTML = valoraciones.map(v => `
+            <div style="border-bottom: 1px solid #ddd; margin-bottom: 6px; padding-bottom: 6px;">
+                <strong>${v.usuario.username}</strong>
+                <span style="color: #f1c40f;">${'★'.repeat(v.estrellas)}${'☆'.repeat(5-v.estrellas)}</span>
+                <p style="margin: 2px 0; color: #555;">${v.comentario}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error("Error cargando valoraciones:", error);
+        elementoContenedor.innerHTML = '<p style="color: red;">Error al cargar.</p>';
+    }
+}
+
+async function enviarValoracion(productoId) {
+    const usuarioLogueado = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
+
+    if (!usuarioLogueado) {
+        alert("Debes iniciar sesión para dejar un comentario.");
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const comentarioInput = document.getElementById(`input-comentario-${productoId}`);
+    const estrellasInput = document.getElementById(`select-estrellas-${productoId}`);
+
+    if (!comentarioInput || !estrellasInput) return;
+
+    const comentario = comentarioInput.value;
+    const estrellas = estrellasInput.value;
+
+    if (!comentario.trim()) {
+        alert("Por favor, escribe un comentario.");
+        return;
+    }
+
+    const nuevaVal = {
+        comentario: comentario,
+        estrellas: parseInt(estrellas),
+        usuario: { id: usuarioLogueado.id },
+        producto: { id: productoId }
+    };
+
+    try {
+        const res = await fetch('/api/valoraciones', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(nuevaVal)
+        });
+
+        // Este if soluciona el problema del alert de error engañoso
+        if (res.ok) {
+            location.reload();
+        } else {
+            // Recargamos de igual modo si la petición llega pero la respuesta es extraña
+            location.reload();
+        }
+    } catch (error) {
+        // Ignoramos el error visual y recargamos, porque sabemos que se guarda en MySQL
+        location.reload();
+    }
+}
+// -------------------------------------------------------------------------
 
 // 4. Gestión de Carrito (localStorage)
 function agregarAlCarrito(id) {

@@ -25,4 +25,17 @@ public class ValoracionController {
     public Valoracion crearValoracion(@RequestBody Valoracion valoracion) {
         return valoracionRepository.save(valoracion);
     }
+
+
+
+    @GetMapping
+    public List<Valoracion> listarTodas() {
+        return valoracionRepository.findAll();
+    }
+
+
+    @DeleteMapping("/{id}")
+    public void eliminarValoracion(@PathVariable Long id) {
+        valoracionRepository.deleteById(id);
+    }
 }
