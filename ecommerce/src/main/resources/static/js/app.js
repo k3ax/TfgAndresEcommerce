@@ -58,43 +58,47 @@ function renderizar(lista) {
         const card = document.createElement('div');
         card.className = 'producto-card';
 
-        // Lógica de imagen: si no hay URL, ponemos una de reemplazo
         const imagenSource = p.imagenUrl ? p.imagenUrl : 'https://via.placeholder.com/150?text=San+Andres';
 
         card.innerHTML = `
-            <img src="${imagenSource}" alt="${p.nombre}" style="width:100%; height:180px; object-fit:cover; border-radius:4px; margin-bottom:12px;">
-            <h3>${p.nombre}</h3>
-            <p style="color: #666; font-size: 0.9rem; margin-bottom: 8px;">${p.descripcion || ''}</p>
-            <p class="precio">${p.precio}€</p>
-            <p style="margin-bottom: 12px;">Stock: <strong>${p.stock}</strong></p>
-            ${p.stock > 0
-                ? `<button onclick="agregarAlCarrito(${p.id})">Añadir al carrito</button>`
-                : '<span class="agotado">Agotado</span>'}
+            <div class="img-container">
+                <img src="${imagenSource}" alt="${p.nombre}">
+            </div>
+            <div class="producto-info">
+                <h3>${p.nombre}</h3>
+                <p class="descripcion">${p.descripcion || ''}</p>
+                <p class="precio">${p.precio}€</p>
+                <p class="stock">Stock: <strong>${p.stock}</strong></p>
+            </div>
 
-            <hr style="margin: 15px 0; border: 0; border-top: 1px solid #eee;">
-            <div class="valoraciones-seccion" style="text-align: left;">
-                <h4 style="font-size: 0.9rem; margin-bottom: 8px;">Opiniones</h4>
-
-                <div id="lista-valoraciones-${p.id}" style="max-height: 120px; overflow-y: auto; margin-bottom: 10px; font-size: 0.85rem;">
-                    <span style="color: gray;">Cargando...</span>
+            <div class="valoraciones-wrapper">
+                <hr>
+                <div class="valoraciones-seccion">
+                    <h4>Opiniones</h4>
+                    <div id="lista-valoraciones-${p.id}" class="lista-comentarios">
+                        <span style="color: gray;">Cargando...</span>
+                    </div>
+                    <div class="nuevo-comentario">
+                        <select id="select-estrellas-${p.id}">
+                            <option value="5">5 Estrellas ★★★★★</option>
+                            <option value="4">4 Estrellas ★★★★☆</option>
+                            <option value="3">3 Estrellas ★★★☆☆</option>
+                            <option value="2">2 Estrellas ★★☆☆☆</option>
+                            <option value="1">1 Estrella ★☆☆☆☆</option>
+                        </select>
+                        <textarea id="input-comentario-${p.id}" placeholder="Escribe tu opinión..."></textarea>
+                        <button class="btn-publicar" onclick="enviarValoracion(${p.id})">Publicar</button>
+                    </div>
                 </div>
+            </div>
 
-                <div class="nuevo-comentario" style="background: #f9f9f9; padding: 8px; border-radius: 4px; font-size: 0.85rem;">
-                    <select id="select-estrellas-${p.id}" style="width: 100%; margin-bottom: 5px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
-                        <option value="5">5 Estrellas ★★★★★</option>
-                        <option value="4">4 Estrellas ★★★★☆</option>
-                        <option value="3">3 Estrellas ★★★☆☆</option>
-                        <option value="2">2 Estrellas ★★☆☆☆</option>
-                        <option value="1">1 Estrella ★☆☆☆☆</option>
-                    </select>
-                    <textarea id="input-comentario-${p.id}" placeholder="Escribe tu opinión..." style="width: 100%; height: 40px; margin-bottom: 5px; resize: none; padding: 4px; border: 1px solid #ccc; border-radius: 4px;"></textarea>
-                    <button onclick="enviarValoracion(${p.id})" style="width: 100%; padding: 6px; font-size: 0.85rem;">Publicar</button>
-                </div>
+            <div class="producto-footer">
+                ${p.stock > 0
+                    ? `<button class="btn-carrito" onclick="agregarAlCarrito(${p.id})">Añadir al carrito</button>`
+                    : '<span class="agotado">Agotado</span>'}
             </div>
         `;
         catalogo.appendChild(card);
-
-        // MUY IMPORTANTE: Cargar las valoraciones JUSTO después de añadir la tarjeta al HTML
         cargarValoraciones(p.id, document.getElementById(`lista-valoraciones-${p.id}`));
     });
 }
