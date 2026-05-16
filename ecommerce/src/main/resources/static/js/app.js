@@ -1,11 +1,10 @@
-let productosBD = []; // Almacén local de productos para filtrado rápido
+let productosBD = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     verificarSesion();
     await cargarProductos();
     actualizarContadorCarrito();
 
-    // Listeners para filtros instantáneos
     const inputBusqueda = document.getElementById('input-busqueda');
     const selectCat = document.getElementById('select-categoria');
     const inputPrecio = document.getElementById('input-precio-max');
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (inputPrecio) inputPrecio.addEventListener('input', filtrar);
 });
 
-// 1. Obtener productos del Backend
 async function cargarProductos() {
     try {
         const response = await fetch('/api/productos');
@@ -26,7 +24,6 @@ async function cargarProductos() {
     }
 }
 
-// 2. Lógica de Filtrado Dinámico
 function filtrar() {
     const busqueda = document.getElementById('input-busqueda').value.toLowerCase();
     const categoria = document.getElementById('select-categoria').value;
@@ -42,11 +39,9 @@ function filtrar() {
     renderizar(filtrados);
 }
 
-// 3. Pintar productos en el index.html (CON IMÁGENES Y VALORACIONES)
 function renderizar(lista) {
     const catalogo = document.getElementById('catalogo');
     if (!catalogo) return;
-
     catalogo.innerHTML = '';
 
     if (lista.length === 0) {
@@ -57,7 +52,6 @@ function renderizar(lista) {
     lista.forEach(p => {
         const card = document.createElement('div');
         card.className = 'producto-card';
-
         const imagenSource = p.imagenUrl ? p.imagenUrl : 'https://via.placeholder.com/150?text=San+Andres';
 
         card.innerHTML = `
@@ -70,7 +64,6 @@ function renderizar(lista) {
                 <p class="precio">${p.precio}€</p>
                 <p class="stock">Stock: <strong>${p.stock}</strong></p>
             </div>
-
             <div class="valoraciones-wrapper">
                 <hr>
                 <div class="valoraciones-seccion">
@@ -91,7 +84,6 @@ function renderizar(lista) {
                     </div>
                 </div>
             </div>
-
             <div class="producto-footer">
                 ${p.stock > 0
                     ? `<button class="btn-carrito" onclick="agregarAlCarrito(${p.id})">Añadir al carrito</button>`
@@ -103,14 +95,11 @@ function renderizar(lista) {
     });
 }
 
-// -------------------------------------------------------------------------
-// BLOQUE NUEVO: LÓGICA DE LAS VALORACIONES (Cargar y Enviar)
-// -------------------------------------------------------------------------
 async function cargarValoraciones(productoId, elementoContenedor) {
     if (!elementoContenedor) return;
     try {
         const res = await fetch(`/api/valoraciones/producto/${productoId}`);
-        if (!res.ok) return; // Si la API falla silenciosamente, abortamos
+        if (!res.ok) return;
         const valoraciones = await res.json();
 
         if (valoraciones.length === 0) {
@@ -126,7 +115,6 @@ async function cargarValoraciones(productoId, elementoContenedor) {
             </div>
         `).join('');
     } catch (error) {
-        console.error("Error cargando valoraciones:", error);
         elementoContenedor.innerHTML = '<p style="color: red;">Error al cargar.</p>';
     }
 }
@@ -135,21 +123,31 @@ async function enviarValoracion(productoId) {
     const usuarioLogueado = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
 
     if (!usuarioLogueado) {
-        alert("Debes iniciar sesión para dejar un comentario.");
-        window.location.href = 'login.html';
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atención',
+            text: 'Debes iniciar sesión para dejar un comentario.',
+            confirmButtonColor: '#3498db',
+            confirmButtonText: 'Ir a Login'
+        }).then((result) => {
+            if(result.isConfirmed) window.location.href = 'login.html';
+        });
         return;
     }
 
     const comentarioInput = document.getElementById(`input-comentario-${productoId}`);
     const estrellasInput = document.getElementById(`select-estrellas-${productoId}`);
-
     if (!comentarioInput || !estrellasInput) return;
 
     const comentario = comentarioInput.value;
     const estrellas = estrellasInput.value;
 
     if (!comentario.trim()) {
-        alert("Por favor, escribe un comentario.");
+        Swal.fire({
+            icon: 'info',
+            title: 'Ups...',
+            text: 'Por favor, escribe un comentario.'
+        });
         return;
     }
 
@@ -167,27 +165,40 @@ async function enviarValoracion(productoId) {
             body: JSON.stringify(nuevaVal)
         });
 
-        // Este if soluciona el problema del alert de error engañoso
         if (res.ok) {
-            location.reload();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Gracias!',
+                text: 'Tu valoración ha sido publicada',
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                location.reload();
+            });
         } else {
-            // Recargamos de igual modo si la petición llega pero la respuesta es extraña
             location.reload();
         }
     } catch (error) {
-        // Ignoramos el error visual y recargamos, porque sabemos que se guarda en MySQL
         location.reload();
     }
 }
-// -------------------------------------------------------------------------
 
-// 4. Gestión de Carrito (localStorage)
 function agregarAlCarrito(id) {
     let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
     carrito.push(id);
     localStorage.setItem('carrito', JSON.stringify(carrito));
     actualizarContadorCarrito();
-    alert("¡Producto añadido!");
+
+    // Alerta tipo Toast pequeña
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Añadido al carrito',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true
+    });
 }
 
 function actualizarContadorCarrito() {
@@ -198,7 +209,6 @@ function actualizarContadorCarrito() {
     }
 }
 
-// 5. Gestión de Sesión y Navegación
 function verificarSesion() {
     const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
     const container = document.getElementById('nav-auth-buttons');

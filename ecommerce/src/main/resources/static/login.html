@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Login - Supermercado Ksax</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 <header class="navbar">
@@ -21,14 +22,12 @@
     <p style="margin-top: 20px;">¿No tienes cuenta? <a href="registro.html">Regístrate aquí</a></p>
 </div>
 
-
 <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const u = document.getElementById('username').value;
         const p = document.getElementById('password').value;
 
-        // Enviamos la petición como JSON para que el Backend (UsuarioController) lo reconozca
         const res = await fetch('/api/usuarios/login', {
             method: 'POST',
             headers: {
@@ -43,10 +42,23 @@
         if (res.ok) {
             const user = await res.json();
             sessionStorage.setItem('usuarioLogueado', JSON.stringify(user));
-            alert("Bienvenido, " + user.username);
-            window.location.href = 'index.html';
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Bienvenido!',
+                text: `Hola de nuevo, ${user.username}`,
+                timer: 1500,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = 'index.html';
+            });
         } else {
-            alert("Usuario o contraseña incorrectos");
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso denegado',
+                text: 'Usuario o contraseña incorrectos',
+                confirmButtonColor: '#3498db'
+            });
         }
     });
 </script>

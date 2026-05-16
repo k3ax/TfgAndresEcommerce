@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Registro - Supermercado Ksax</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 <div class="form-container">
@@ -34,10 +35,21 @@
         });
 
         if (res.ok) {
-            alert("Cuenta creada con éxito");
-            window.location.href = 'login.html';
+            Swal.fire({
+                icon: 'success',
+                title: '¡Cuenta creada!',
+                text: 'Registro completado con éxito. Ya puedes iniciar sesión.',
+                confirmButtonColor: '#27ae60'
+            }).then(() => {
+                window.location.href = 'login.html';
+            });
         } else {
-            alert("Error al registrar usuario");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el registro',
+                text: 'Ese nombre de usuario o correo ya está en uso.',
+                confirmButtonColor: '#e74c3c'
+            });
         }
     });
 </script>

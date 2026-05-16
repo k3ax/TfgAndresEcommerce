@@ -4,58 +4,21 @@
     <meta charset="UTF-8">
     <title>Mi Carrito</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        .item-carrito {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: white;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            transition: transform 0.2s;
-        }
-        .item-carrito:hover {
-            transform: translateX(5px);
-            background-color: #fcfcfc;
-        }
-        .info-producto {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .img-carrito {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-        }
-        .btn-quitar {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
+        .item-carrito { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-bottom: 1px solid #eee; margin-bottom: 8px; border-radius: 8px; transition: transform 0.2s; }
+        .item-carrito:hover { transform: translateX(5px); background-color: #fcfcfc; }
+        .info-producto { display: flex; align-items: center; gap: 15px; }
+        .img-carrito { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+        .btn-quitar { background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
         .btn-quitar:hover { background: #c0392b; }
-
-        .acciones-carrito {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-        }
+        .acciones-carrito { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
     </style>
 </head>
 <body>
 <header class="navbar">
     <h1 class="logo" onclick="location.href='index.html'" style="cursor:pointer">Supermercado Ksax</h1>
-    <div id="nav-auth-buttons" class="nav-buttons">
-    </div>
+    <div id="nav-auth-buttons" class="nav-buttons"></div>
 </header>
 
 <main class="form-container" style="max-width: 850px;">
@@ -63,12 +26,8 @@
         <h2>Tu Cesta</h2>
         <button onclick="location.href='index.html'" style="background-color: #95a5a6;">← Volver a la Tienda</button>
     </div>
-
-    <div id="lista-carrito">
-    </div>
-
+    <div id="lista-carrito"></div>
     <hr style="margin: 20px 0;">
-
     <div class="acciones-carrito">
         <div class="total-info">
             <h3 style="margin: 0;">Total a pagar: <span id="precio-total" style="color: #27ae60;">0</span>€</h3>
@@ -106,7 +65,6 @@
         try {
             const res = await fetch('/api/productos');
             const productosBD = await res.json();
-
             let html = "";
             let total = 0;
 
@@ -132,7 +90,6 @@
                     total += p.precio;
                 }
             });
-
             contenedor.innerHTML = html;
             totalTxt.innerText = total.toFixed(2);
             document.getElementById('btn-comprar').style.display = 'block';
@@ -145,7 +102,6 @@
         let carrito = JSON.parse(localStorage.getItem('carrito')) || [];
         carrito.splice(index, 1);
         localStorage.setItem('carrito', JSON.stringify(carrito));
-
         mostrarCarrito();
         actualizarContadorCarrito();
     }
@@ -153,17 +109,22 @@
     async function finalizarCompra() {
         const usuario = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
         if (!usuario) {
-            alert("Debes iniciar sesión para finalizar el pedido");
-            window.location.href = 'login.html';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para finalizar el pedido',
+                confirmButtonColor: '#3498db',
+                confirmButtonText: 'Ir a Login'
+            }).then(() => {
+                window.location.href = 'login.html';
+            });
             return;
         }
 
         const ids = JSON.parse(localStorage.getItem('carrito')) || [];
         if (ids.length === 0) return;
-
         const total = parseFloat(document.getElementById('precio-total').innerText);
 
-        // Crear el registro del pedido en el historial
         const resPedido = await fetch('/api/pedidos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -175,16 +136,26 @@
         });
 
         if (resPedido.ok) {
-            // Actualizar stock en la base de datos
             for (const id of ids) {
                 await fetch(`/api/productos/${id}/comprar`, { method: 'POST' });
             }
 
-            alert("¡Pedido realizado correctamente! Gracias por tu compra.");
-            localStorage.removeItem('carrito');
-            window.location.href = 'index.html';
+            Swal.fire({
+                icon: 'success',
+                title: '¡Pedido realizado!',
+                text: 'Tu compra se ha procesado correctamente. ¡Gracias por confiar en nosotros!',
+                confirmButtonColor: '#27ae60'
+            }).then(() => {
+                localStorage.removeItem('carrito');
+                window.location.href = 'index.html';
+            });
         } else {
-            alert("Hubo un error al procesar el pedido en el servidor.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Hubo un error al procesar el pedido en el servidor.',
+                confirmButtonColor: '#e74c3c'
+            });
         }
     }
 </script>
