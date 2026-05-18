@@ -17,10 +17,6 @@ public class ProductoController {
     @Autowired
     private ProductoRepository productoRepository;
 
-    /**
-     * 1. Listado de productos.
-     * Si 'soloActivos' es true (por defecto), solo devuelve los que no están ocultos.
-     */
     @GetMapping
     public List<Producto> listar(@RequestParam(required = false, defaultValue = "true") boolean soloActivos) {
         List<Producto> todos = productoRepository.findAll();
@@ -33,10 +29,6 @@ public class ProductoController {
         return todos;
     }
 
-    /**
-     * 2. Crear o Actualizar producto.
-     * Si el JSON incluye un 'id', JPA actualizará el producto automáticamente.
-     */
     @PostMapping
     public Producto guardar(@RequestBody Producto producto) {
         if (producto.getActivo() == null) {
@@ -45,9 +37,7 @@ public class ProductoController {
         return productoRepository.save(producto);
     }
 
-    /**
-     * 3. Soft Delete: Oculta el producto de la vista pública.
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> ocultar(@PathVariable Long id) {
         return productoRepository.findById(id).map(producto -> {
@@ -57,9 +47,7 @@ public class ProductoController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * 4. Reactivar: Vuelve a hacer visible un producto oculto.
-     */
+
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<?> reactivar(@PathVariable Long id) {
         return productoRepository.findById(id).map(producto -> {

@@ -17,7 +17,7 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query("SELECT COUNT(p) FROM Pedido p")
     Long contarTotalPedidos();
 
-    // Obtiene (Fecha, Suma Total) para la gráfica de evolución
+
     @Query("SELECT CAST(p.fecha AS date) as dia, SUM(p.total) FROM Pedido p GROUP BY CAST(p.fecha AS date) ORDER BY dia ASC")
     List<Object[]> obtenerVentasPorDia();
 }

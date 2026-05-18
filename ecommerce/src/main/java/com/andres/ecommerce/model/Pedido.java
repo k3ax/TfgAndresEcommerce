@@ -16,11 +16,11 @@ public class Pedido {
     private LocalDateTime fecha;
     private Double total;
 
-    @ManyToOne // Relación con el Usuario
+    @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
 
-    @ManyToMany // Un pedido puede tener muchos productos y viceversa
+    @ManyToMany // Un pedido puede tener muchos productos y viceversa por eso hago esta relacion
     @JoinTable(
             name = "pedido_productos",
             joinColumns = @JoinColumn(name = "pedido_id"),

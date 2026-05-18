@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
-    // Al extender de JpaRepository, ya tienes: save(), findAll(), findById(), delete()...
+
 }

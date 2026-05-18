@@ -24,7 +24,7 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     private Rol rol;
 
-    // Definimos los roles solicitados
+    // Definimos los dos roles que tengo
     public enum Rol {
         USER_BASIC, ADMIN
     }

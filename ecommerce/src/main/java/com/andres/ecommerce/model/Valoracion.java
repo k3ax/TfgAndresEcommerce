@@ -16,13 +16,13 @@ public class Valoracion {
     private String comentario;
 
     @Column(nullable = false)
-    private int estrellas; // Puntuación de 1 a 5
+    private int estrellas;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
-    private Usuario usuario; // Relación con la tabla usuarios
+    private Usuario usuario;
 
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
-    private Producto producto; // Relación con la tabla productos
+    private Producto producto;
 }

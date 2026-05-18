@@ -33,7 +33,6 @@ public class Producto {
 
     private Boolean activo = true;
 
-    // Lógica rápida para el frontend: si el stock es 0, devolverá true
     public boolean isAgotado() {
         return this.stock <= 0;
     }

@@ -7,6 +7,6 @@ import java.util.List;
 
 @Repository
 public interface ValoracionRepository extends JpaRepository<Valoracion, Long> {
-    // Método para obtener todas las valoraciones de un producto concreto
+
     List<Valoracion> findByProductoId(Long productoId);
 }
