@@ -52,7 +52,7 @@ function renderizar(lista) {
     lista.forEach(p => {
         const card = document.createElement('div');
         card.className = 'producto-card';
-        const imagenSource = p.imagenUrl ? p.imagenUrl : 'https://via.placeholder.com/150?text=San+Andres';
+        const imagenSource = p.imagenUrl ? p.imagenUrl : 'https://via.placeholder.com/150?text=Sin+Imagen';
 
         card.innerHTML = `
             <div class="img-container">
