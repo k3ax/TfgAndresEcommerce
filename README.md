@@ -83,7 +83,7 @@ Eliminar (Borrado Lógico): He implementado un sistema de Soft Delete. Si decide
 📊 Análisis y Gráficas del Administrador
 Una vez dentro del Panel de Administrador, no solo podrás gestionar la tienda, sino que tendrás acceso a un Dashboard completo de métricas. He integrado gráficos dinámicos que muestran en tiempo real los ingresos, el porcentaje de ventas por categoría, la evolución diaria y la salud del stock.
 
-(Así se ve el panel de control) 👇
+(Así se ven las graficas dentro del panel de control) 👇
 ![img.png](img.png)
 
 Nota: También podrás moderar a tu comunidad y eliminar comentarios negativos o inapropiados de parte de los usuarios que no tengan nada que ver con los productos.
